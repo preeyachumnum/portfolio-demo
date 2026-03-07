@@ -17,6 +17,13 @@ const PORTFOLIO_PROJECTS: PortfolioProject[] = [
       'Parcel operations system for USA-Thai shipping with Admin flows, Customer portal, and tracking system.',
     link: '/usa-thai-shipping',
   },
+  {
+    id: 'pos-system',
+    title: 'OmniPOS Enterprise',
+    status: 'พร้อมแสดง',
+    description: 'ระบบจัดการหน้าร้าน (POS) ระดับองค์กร พร้อมฟังก์ชันชำระเงินแบบครบวงจรและระบบจัดการหลังบ้าน (Backoffice)',
+    link: '/pos-system',
+  }
 ];
 
 function ProjectCard({ project }: { project: PortfolioProject }) {
