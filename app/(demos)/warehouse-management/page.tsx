@@ -330,9 +330,9 @@ export default function WarehouseSystem() {
                     <tbody className="text-sm divide-y divide-slate-100">
                       {filteredInventory.length === 0 ? (
                         <tr>
-                          <td colSpan="8" className="px-6 py-12 text-center text-slate-500">
+                          <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
                             <Package size={40} className="mx-auto mb-3 text-slate-300" />
-                            No products found matching "{searchQuery}"
+                            No products found matching &quot;{searchQuery}&quot;
                           </td>
                         </tr>
                       ) : (
@@ -449,7 +449,7 @@ export default function WarehouseSystem() {
                         <tr className="hover:bg-slate-50">
                           <td className="py-3 px-6">
                             <p className="font-mono font-medium text-slate-700">ELEC-MAC-16</p>
-                            <p className="text-xs text-slate-500">MacBook Pro 16" M3 Max</p>
+                            <p className="text-xs text-slate-500">MacBook Pro 16&quot; M3 Max</p>
                           </td>
                           <td className="py-3 px-6 text-slate-600">TechSource Global</td>
                           <td className="py-3 px-6 text-right"><span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded font-mono text-xs text-slate-700">A-01-01</span></td>
@@ -529,7 +529,7 @@ export default function WarehouseSystem() {
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4">
                           <p className="font-mono font-medium text-slate-700">ELEC-DEL-27</p>
-                          <p className="text-xs text-slate-500">Dell UltraSharp 27" 4K</p>
+                          <p className="text-xs text-slate-500">Dell UltraSharp 27&quot; 4K</p>
                         </td>
                         <td className="py-3 px-4 text-center"><span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded font-mono text-xs text-slate-700">A-01-02</span></td>
                         <td className="py-3 px-4 text-center font-medium text-slate-600">8</td>
