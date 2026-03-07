@@ -16,6 +16,11 @@ const DEMO_PROJECTS = [
     path: '/pos-system',
     title: 'OmniPOS Enterprise',
     description: 'ระบบจัดการหน้าร้าน (POS) ระดับองค์กร พร้อมระบบจำลองการชำระเงินเต็มรูปแบบ คำนวณเงินทอนอัตโนมัติ และซิงค์ข้อมูลหลังบ้าน'
+  },
+  {
+    path: '/warehouse-management',
+    title: 'Nexus Warehouse Management',
+    description: 'ระบบจัดการคลังสินค้าอัจฉริยะ (WMS) พร้อม Dashboard สรุปผล, การแจ้งเตือนสต๊อกใกล้หมด, และระบบตารางจัดการข้อมูลขนาดใหญ่'
   }
 ];
 

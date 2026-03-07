@@ -23,6 +23,13 @@ const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     status: 'พร้อมแสดง',
     description: 'ระบบจัดการหน้าร้าน (POS) ระดับองค์กร พร้อมฟังก์ชันชำระเงินแบบครบวงจรและระบบจัดการหลังบ้าน (Backoffice)',
     link: '/pos-system',
+  },
+{
+    id: 'warehouse-management',
+    title: 'Nexus Warehouse Management',
+    status: 'พร้อมแสดง',
+    description: 'ระบบจัดการคลังสินค้าอัจฉริยะ (WMS) พร้อม Dashboard สรุปผล, การแจ้งเตือนสต๊อกใกล้หมด, และระบบตารางจัดการข้อมูลขนาดใหญ่',
+    link: '/warehouse-management',
   }
 ];
 
