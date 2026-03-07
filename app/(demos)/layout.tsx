@@ -21,6 +21,11 @@ const DEMO_PROJECTS = [
     path: '/warehouse-management',
     title: 'Nexus Warehouse Management',
     description: 'ระบบจัดการคลังสินค้าอัจฉริยะ (WMS) พร้อม Dashboard สรุปผล, การแจ้งเตือนสต๊อกใกล้หมด, และระบบตารางจัดการข้อมูลขนาดใหญ่'
+  },
+  {
+    path: '/project-management',
+    title: 'Process Flow Kanban Board',
+    description: 'ระบบจัดการโครงการและกระดาน Kanban สไตล์ Modern SaaS รองรับการ Drag and Drop (ลากวาง) เปลี่ยนสถานะงานได้จริง'
   }
 ];
 
