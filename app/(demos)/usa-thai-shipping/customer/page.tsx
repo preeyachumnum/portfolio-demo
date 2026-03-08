@@ -58,10 +58,10 @@ export default function ShippingCustomerPortal() {
   }
 
   return (
-    <div className={`${SHIPPING_PAGE_SHELL_CLASS} font-sans selection:bg-indigo-100`}>
+    <div className={`${SHIPPING_PAGE_SHELL_CLASS} h-full overflow-y-auto font-sans selection:bg-indigo-100`}>
       <ShippingBackgroundDecor />
 
-      <div className="relative flex min-h-screen flex-col">
+      <div className="relative flex min-h-full flex-col">
         <header className="sticky top-0 z-50 border-b border-white/60 bg-white/75 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
             <div className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-gray-900">

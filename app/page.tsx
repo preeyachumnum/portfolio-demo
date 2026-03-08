@@ -1,48 +1,10 @@
 import { ArrowRight } from 'lucide-react';
 
-type PortfolioProject = {
-  id: string;
-  title: string;
-  status: string;
-  description: string;
-  link: string;
-};
+import { DEMO_PROJECTS, type DemoProject } from './data/demo-projects';
 
-const PORTFOLIO_PROJECTS: PortfolioProject[] = [
-  {
-    id: 'usa-thai-shipping',
-    title: 'USA-Thai Shipping Suite',
-    status: 'พร้อมแสดง',
-    description:
-      'Parcel operations system for USA-Thai shipping with Admin flows, Customer portal, and tracking system.',
-    link: '/usa-thai-shipping',
-  },
-  {
-    id: 'pos-system',
-    title: 'OmniPOS Enterprise',
-    status: 'พร้อมแสดง',
-    description: 'ระบบจัดการหน้าร้าน (POS) ระดับองค์กร พร้อมฟังก์ชันชำระเงินแบบครบวงจรและระบบจัดการหลังบ้าน (Backoffice)',
-    link: '/pos-system',
-  },
-{
-    id: 'warehouse-management',
-    title: 'Nexus Warehouse Management',
-    status: 'พร้อมแสดง',
-    description: 'ระบบจัดการคลังสินค้าอัจฉริยะ (WMS) พร้อม Dashboard สรุปผล, การแจ้งเตือนสต๊อกใกล้หมด, และระบบตารางจัดการข้อมูลขนาดใหญ่',
-    link: '/warehouse-management',
-  },
-{
-    id: 'project-management',
-    title: 'Process Flow Kanban Board',
-    status: 'พร้อมแสดง',
-    description: 'ระบบจัดการโครงการและกระดาน Kanban สไตล์ Modern SaaS รองรับการ Drag and Drop (ลากวาง) เปลี่ยนสถานะงานได้จริง',
-    link: '/project-management',
-  }
-];
-
-function ProjectCard({ project }: { project: PortfolioProject }) {
+function ProjectCard({ project }: { project: DemoProject }) {
   return (
-    <a href={project.link} className="block">
+    <a href={project.path} className="block">
       <div className="group relative h-full overflow-hidden rounded-2xl border border-[#222635] bg-[#131620] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/50 hover:shadow-[0_8px_30px_rgb(59,130,246,0.12)]">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
@@ -53,9 +15,7 @@ function ProjectCard({ project }: { project: PortfolioProject }) {
           </span>
         </div>
 
-        <p className="relative z-10 mb-8 h-16 text-sm leading-relaxed text-gray-400">
-          {project.description}
-        </p>
+        <p className="relative z-10 mb-8 h-16 text-sm leading-relaxed text-gray-400">{project.description}</p>
 
         <div className="relative z-10 flex items-center text-sm font-semibold text-gray-300 transition-colors group-hover:text-blue-400">
           เปิดตัวอย่าง
@@ -68,7 +28,7 @@ function ProjectCard({ project }: { project: PortfolioProject }) {
 
 export default function PortfolioHome() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0B0D14] font-sans text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#0B0D14] font-sans text-white">
       <div
         className="absolute inset-0 z-0 opacity-[0.03]"
         style={{
@@ -97,8 +57,8 @@ export default function PortfolioHome() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {PORTFOLIO_PROJECTS.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+          {DEMO_PROJECTS.map((project) => (
+            <ProjectCard key={project.path} project={project} />
           ))}
         </div>
       </div>
