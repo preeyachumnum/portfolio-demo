@@ -3,13 +3,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Info, X } from 'lucide-react';
+import { ChevronLeft, Home, Info, X } from 'lucide-react';
 
 import { DEMO_PROJECTS } from '../data/demo-projects';
 
 export default function DemosLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const isMiniGameChildPage = pathname.startsWith('/mini-game/') && pathname !== '/mini-game';
 
   const currentProject = DEMO_PROJECTS.find((project) => pathname.startsWith(project.path)) || {
     title: 'Demo System',
@@ -24,6 +25,17 @@ export default function DemosLayout({ children }: { children: React.ReactNode })
             <Home size={16} />
             <span>กลับหน้า Portal</span>
           </Link>
+
+          {isMiniGameChildPage && (
+            <>
+              <div className="h-4 w-px bg-white/20" />
+              <Link href="/mini-game" className="flex items-center gap-1.5 text-sm font-semibold text-zinc-300 transition-colors hover:text-emerald-300">
+                <ChevronLeft size={16} />
+                <span>กลับหน้า Mini Games</span>
+              </Link>
+            </>
+          )}
+
           <div className="h-4 w-px bg-white/20" />
           <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200">
             <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
@@ -56,7 +68,7 @@ export default function DemosLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      <div className="relative mt-0 flex-1 overflow-hidden border border-white/5 bg-white shadow-2xl md:mx-2 md:mt-2 md:rounded-t-xl">
+      <div className="relative mt-0 flex-1 overflow-x-hidden overflow-y-auto border border-white/5 bg-white shadow-2xl md:mx-2 md:mt-2 md:rounded-t-xl">
         {children}
       </div>
     </div>

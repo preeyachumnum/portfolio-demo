@@ -17,35 +17,35 @@ export const DEMO_PROJECTS: DemoProject[] = [
     path: '/pos-system',
     title: 'OmniPOS Enterprise',
     description:
-      'ระบบจัดการหน้าร้าน (POS) ระดับองค์กร พร้อมฟังก์ชันชำระเงินแบบครบวงจรและระบบจัดการหลังบ้าน (Backoffice)',
+      'ระบบจัดการหน้าร้านและหลังบ้านระดับองค์กร พร้อมงานขาย ชำระเงิน และ backoffice workflow แบบครบชุด',
     status: 'พร้อมแสดง',
   },
   {
     path: '/warehouse-management',
     title: 'Nexus Warehouse Management',
     description:
-      'ระบบจัดการคลังสินค้าอัจฉริยะ (WMS) พร้อม Dashboard สรุปผล, การแจ้งเตือนสต๊อกใกล้หมด, และระบบตารางจัดการข้อมูลขนาดใหญ่',
+      'ระบบคลังสินค้า WMS พร้อม dashboard ภาพรวม การแจ้งเตือนสต็อก และเครื่องมือจัดการข้อมูลขนาดใหญ่',
     status: 'พร้อมแสดง',
   },
   {
     path: '/project-management',
     title: 'Process Flow Kanban Board',
     description:
-      'ระบบจัดการโครงการและกระดาน Kanban สไตล์ Modern SaaS รองรับการ Drag and Drop (ลากวาง) เปลี่ยนสถานะงานได้จริง',
+      'บอร์ดจัดการโปรเจกต์สไตล์ modern SaaS รองรับการลากวาง task และติดตามสถานะงานแบบเป็นขั้นตอน',
     status: 'พร้อมแสดง',
   },
   {
     path: '/pos-system-smart',
     title: 'Smart POS System',
     description:
-      'POS Mode (หน้าร้าน): สำหรับพนักงานรับออเดอร์ คิดเงิน, KDS Mode (ระบบในครัว), Kiosk Mode (ตู้สั่งอาหาร), Dashboard (หลังบ้าน)',
+      'ชุดเดโม POS หลายโหมด ทั้งหน้าร้าน KDS kiosk และ dashboard สำหรับโชว์ flow การทำงานครบวงจร',
     status: 'พร้อมแสดง',
   },
   {
-    path: '/mini-2d-pool',
-    title: 'Mini Pool Game 2D',
+    path: '/mini-game',
+    title: 'Mini Game Portal',
     description:
-      '2D เกม pool เล่นคนเดียวได้ เล่นกับเพื่อนได้ เล่นกับบอทได้',
+      'หน้า portal รวมมินิเกมทั้งหมดในโปรเจกต์ สำหรับเลือกเข้าเล่นเกมที่มีอยู่ตอนนี้และรองรับการเพิ่มเกมใหม่ในอนาคต',
     status: 'พร้อมแสดง',
   },
 ];
