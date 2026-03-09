@@ -41,4 +41,11 @@ export const DEMO_PROJECTS: DemoProject[] = [
       'POS Mode (หน้าร้าน): สำหรับพนักงานรับออเดอร์ คิดเงิน, KDS Mode (ระบบในครัว), Kiosk Mode (ตู้สั่งอาหาร), Dashboard (หลังบ้าน)',
     status: 'พร้อมแสดง',
   },
+  {
+    path: '/mini-2d-pool',
+    title: 'Mini Pool Game 2D',
+    description:
+      '2D เกม pool เล่นคนเดียวได้ เล่นกับเพื่อนได้ เล่นกับบอทได้',
+    status: 'พร้อมแสดง',
+  },
 ];
