@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Bot, RotateCcw, User, Users } from 'lucide-react';
+import { Bot, RotateCcw, User, Users, Volume2, VolumeX } from 'lucide-react';
 
 interface Point {
   x: number;
@@ -132,6 +132,8 @@ class PoolBall {
 
 export default function PoolGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const soundEnabledRef = useRef(true);
 
   const [uiState, setUiState] = useState<UIState>({
     mode: 'menu',
@@ -140,6 +142,7 @@ export default function PoolGame() {
     totalBalls: 7,
     message: null,
   });
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const gameRef = useRef({
     mode: 'menu' as GameMode,
@@ -178,6 +181,126 @@ export default function PoolGame() {
     let isAiming = false;
     let dragStart: Point = { x: 0, y: 0 };
     let dragCurrent: Point = { x: 0, y: 0 };
+    let lastCollisionSoundAt = 0;
+
+    const ensureAudioContext = () => {
+      if (!soundEnabledRef.current) return null;
+      if (!audioContextRef.current) {
+        audioContextRef.current = new window.AudioContext();
+      }
+
+      if (audioContextRef.current.state === 'suspended') {
+        void audioContextRef.current.resume();
+      }
+
+      return audioContextRef.current;
+    };
+
+    const playTone = ({
+      frequency,
+      endFrequency,
+      duration,
+      volume,
+      type = 'sine',
+      when = 0,
+    }: {
+      frequency: number;
+      endFrequency?: number;
+      duration: number;
+      volume: number;
+      type?: OscillatorType;
+      when?: number;
+    }) => {
+      const audioContext = ensureAudioContext();
+      if (!audioContext || audioContext.state !== 'running') return;
+
+      const startAt = audioContext.currentTime + when;
+      const stopAt = startAt + duration;
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+      if (endFrequency && endFrequency > 0) {
+        oscillator.frequency.exponentialRampToValueAtTime(endFrequency, stopAt);
+      }
+
+      gainNode.gain.setValueAtTime(0.0001, startAt);
+      gainNode.gain.linearRampToValueAtTime(volume, startAt + Math.min(0.01, duration / 3));
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.start(startAt);
+      oscillator.stop(stopAt + 0.01);
+    };
+
+    const playCueShotSound = (strength: number) => {
+      const normalizedStrength = Math.max(0.15, Math.min(strength, 1));
+      playTone({
+        frequency: 190 + normalizedStrength * 80,
+        endFrequency: 90 + normalizedStrength * 30,
+        duration: 0.09 + normalizedStrength * 0.04,
+        volume: 0.04 + normalizedStrength * 0.05,
+        type: 'triangle',
+      });
+    };
+
+    const playCollisionSound = (strength: number) => {
+      const now = performance.now();
+      if (now - lastCollisionSoundAt < 45) return;
+      lastCollisionSoundAt = now;
+
+      const normalizedStrength = Math.max(0.1, Math.min(strength, 1));
+      playTone({
+        frequency: 500 + normalizedStrength * 180,
+        endFrequency: 220 + normalizedStrength * 120,
+        duration: 0.04 + normalizedStrength * 0.03,
+        volume: 0.02 + normalizedStrength * 0.03,
+        type: 'square',
+      });
+    };
+
+    const playPocketSound = (isScratch: boolean) => {
+      if (isScratch) {
+        playTone({
+          frequency: 240,
+          endFrequency: 120,
+          duration: 0.18,
+          volume: 0.06,
+          type: 'sawtooth',
+        });
+        return;
+      }
+
+      playTone({
+        frequency: 640,
+        endFrequency: 280,
+        duration: 0.16,
+        volume: 0.05,
+        type: 'triangle',
+      });
+      playTone({
+        frequency: 860,
+        endFrequency: 520,
+        duration: 0.1,
+        volume: 0.025,
+        type: 'sine',
+        when: 0.02,
+      });
+    };
+
+    const playOutcomeSound = (result: 'win' | 'lose') => {
+      if (result === 'win') {
+        playTone({ frequency: 523.25, duration: 0.12, volume: 0.05, type: 'triangle' });
+        playTone({ frequency: 659.25, duration: 0.12, volume: 0.055, type: 'triangle', when: 0.08 });
+        playTone({ frequency: 783.99, duration: 0.2, volume: 0.06, type: 'triangle', when: 0.16 });
+        return;
+      }
+
+      playTone({ frequency: 320, endFrequency: 220, duration: 0.18, volume: 0.055, type: 'sawtooth' });
+      playTone({ frequency: 240, endFrequency: 140, duration: 0.26, volume: 0.05, type: 'sawtooth', when: 0.08 });
+    };
 
     const syncUI = () => {
       setUiState((prev) => {
@@ -200,7 +323,8 @@ export default function PoolGame() {
       });
     };
 
-    const gameOver = (title: string, desc: string, color: string) => {
+    const gameOver = (title: string, desc: string, color: string, result: 'win' | 'lose') => {
+      playOutcomeSound(result);
       setUiState((prev) => ({ ...prev, message: { title, desc, color } }));
       gameRef.current.mode = 'menu';
       gameRef.current.isMoving = false;
@@ -338,6 +462,10 @@ export default function PoolGame() {
 
           const relVx = first.vx - second.vx;
           const relVy = first.vy - second.vy;
+          const impactSpeed = Math.abs(nx * relVx + ny * relVy);
+          if (impactSpeed > 0.45) {
+            playCollisionSound(Math.min(impactSpeed / 10, 1));
+          }
           const impulse = (2 * (nx * relVx + ny * relVy)) / (first.mass + second.mass);
 
           first.vx -= impulse * second.mass * nx;
@@ -361,6 +489,7 @@ export default function PoolGame() {
           ball.vy = 0;
 
           if (ball.isCue) {
+            playPocketSound(true);
             gameRef.current.scratchThisTurn = true;
 
             setTimeout(() => {
@@ -372,9 +501,9 @@ export default function PoolGame() {
           } else if (ball.is8Ball) {
             if (gameRef.current.mode === 'solo') {
               if (gameRef.current.score === gameRef.current.totalBalls) {
-                gameOver('คุณชนะ!', 'ยิงลูก 8 ลงหลุมสำเร็จ', 'text-green-400');
+                gameOver('คุณชนะ!', 'ยิงลูก 8 ลงหลุมสำเร็จ', 'text-green-400', 'win');
               } else {
-                gameOver('จบเกม!', 'คุณยิงลูก 8 ลงหลุมก่อนเก็บลูกสีหมด', 'text-red-500');
+                gameOver('จบเกม!', 'คุณยิงลูก 8 ลงหลุมก่อนเก็บลูกสีหมด', 'text-red-500', 'lose');
               }
             } else {
               const playerName = gameRef.current.turn === 1
@@ -384,16 +513,17 @@ export default function PoolGame() {
                   : 'ผู้เล่น 2';
 
               if (gameRef.current.score === gameRef.current.totalBalls) {
-                gameOver(`${playerName} ชนะ!`, 'ยิงลูก 8 ลงหลุมสำเร็จ', 'text-green-400');
+                gameOver(`${playerName} ชนะ!`, 'ยิงลูก 8 ลงหลุมสำเร็จ', 'text-green-400', 'win');
               } else {
                 const winnerName = gameRef.current.turn === 1
                   ? gameRef.current.mode === 'pve' ? 'Bot' : 'ผู้เล่น 2'
                   : 'ผู้เล่น 1';
 
-                gameOver(`${winnerName} ชนะ!`, `${playerName} ยิงลูก 8 ลงหลุมก่อนเก็บลูกสีหมด`, 'text-amber-400');
+                gameOver(`${winnerName} ชนะ!`, `${playerName} ยิงลูก 8 ลงหลุมก่อนเก็บลูกสีหมด`, 'text-amber-400', 'lose');
               }
             }
           } else {
+            playPocketSound(false);
             gameRef.current.score++;
             gameRef.current.hasPottedThisTurn = true;
             syncUI();
@@ -559,11 +689,13 @@ export default function PoolGame() {
 
           cueBall.vx = Math.cos(finalAimAngle) * power;
           cueBall.vy = Math.sin(finalAimAngle) * power;
+          playCueShotSound(Math.min(power / 25, 1));
         }
       } else {
         const angle = Math.random() * Math.PI * 2;
         cueBall.vx = Math.cos(angle) * 15;
         cueBall.vy = Math.sin(angle) * 15;
+        playCueShotSound(0.6);
       }
 
       gameRef.current.botActionTimer = 0;
@@ -630,6 +762,7 @@ export default function PoolGame() {
     };
 
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      ensureAudioContext();
       if (event.cancelable) event.preventDefault();
       if (gameRef.current.isMoving) return;
       if (gameRef.current.mode === 'pve' && gameRef.current.turn === 2) return;
@@ -669,10 +802,12 @@ export default function PoolGame() {
         cueBall.vx = vx;
         cueBall.vy = vy;
         gameRef.current.hasPottedThisTurn = false;
+        playCueShotSound(Math.min(speed / (MAX_PULL * POWER_MULTIPLIER), 1));
       }
     };
 
     window.startPoolGame = (mode: GameMode) => {
+      ensureAudioContext();
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
       gameRef.current.mode = mode;
@@ -712,6 +847,10 @@ export default function PoolGame() {
       window.removeEventListener('touchmove', handlePointerMove);
       window.removeEventListener('touchend', handlePointerUp);
       delete window.startPoolGame;
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        void audioContextRef.current.close();
+      }
+      audioContextRef.current = null;
     };
   }, []);
 
@@ -720,8 +859,34 @@ export default function PoolGame() {
     window.startPoolGame?.(mode);
   };
 
+  const toggleSound = () => {
+    const nextSoundEnabled = !soundEnabledRef.current;
+    soundEnabledRef.current = nextSoundEnabled;
+    setSoundEnabled(nextSoundEnabled);
+
+    if (!audioContextRef.current) return;
+
+    if (nextSoundEnabled) {
+      void audioContextRef.current.resume();
+      return;
+    }
+
+    if (audioContextRef.current.state === 'running') {
+      void audioContextRef.current.suspend();
+    }
+  };
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-900 font-sans text-white touch-none selection:bg-transparent">
+      <button
+        onClick={toggleSound}
+        title={soundEnabled ? 'Mute sound' : 'Enable sound'}
+        className="absolute bottom-4 right-4 z-[60] flex items-center gap-2 rounded-xl border border-slate-600 bg-slate-800/90 px-3 py-2 text-sm font-semibold text-slate-100 shadow-lg backdrop-blur-md transition hover:bg-slate-700/90 active:scale-95"
+      >
+        {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+        <span>{soundEnabled ? 'Sound On' : 'Sound Off'}</span>
+      </button>
+
       {uiState.mode === 'menu' && !uiState.message && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/90 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-3xl border border-slate-700 bg-slate-800 p-8 text-center shadow-2xl">
