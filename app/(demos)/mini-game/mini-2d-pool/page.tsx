@@ -648,49 +648,135 @@ export default function PoolGame() {
       ctx.restore();
     };
 
+    const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+    const distanceToSegment = (point: Point, start: Point, end: Point) => {
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const lengthSquared = dx * dx + dy * dy;
+
+      if (lengthSquared === 0) {
+        return Math.hypot(point.x - start.x, point.y - start.y);
+      }
+
+      const t = clamp(((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared, 0, 1);
+      const projX = start.x + dx * t;
+      const projY = start.y + dy * t;
+      return Math.hypot(point.x - projX, point.y - projY);
+    };
+
+    const isLaneClear = (
+      start: Point,
+      end: Point,
+      ignoredBalls: PoolBall[],
+      clearanceRadius: number
+    ) => {
+      const ignored = new Set(ignoredBalls);
+
+      return !balls.some((ball) => {
+        if (!ball.active || ignored.has(ball)) return false;
+        return distanceToSegment(ball, start, end) < clearanceRadius;
+      });
+    };
+
+    const isInsidePlayableArea = (x: number, y: number, radius: number) =>
+      x > table.left + radius &&
+      x < table.right - radius &&
+      y > table.top + radius &&
+      y < table.bottom - radius;
+
     const executeBotTurn = () => {
       const cueBall = balls.find((ball) => ball.isCue && ball.active);
       if (!cueBall) return;
 
-      let targetBall: PoolBall | null = null;
-      let targetPocket: Point | null = null;
-      let bestDistance = Infinity;
+      let bestShot:
+        | {
+            targetBall: PoolBall;
+            ghostX: number;
+            ghostY: number;
+            shotScore: number;
+            cueDistance: number;
+            pocketDistance: number;
+            aimAngle: number;
+          }
+        | null = null;
+      let fallbackTarget: PoolBall | null = null;
+      let fallbackDistance = Infinity;
 
       const targetBalls = balls.filter(
         (ball) => !ball.isCue && ball.active && (!ball.is8Ball || gameRef.current.score === gameRef.current.totalBalls)
       );
 
       for (const ball of targetBalls) {
+        const directDistance = Math.hypot(ball.x - cueBall.x, ball.y - cueBall.y);
+        if (directDistance < fallbackDistance) {
+          fallbackDistance = directDistance;
+          fallbackTarget = ball;
+        }
+
         for (const pocket of pockets) {
           if (pocket.r === undefined) continue;
-          const distance = Math.hypot(ball.x - pocket.x, ball.y - pocket.y);
-          if (distance < bestDistance) {
-            bestDistance = distance;
-            targetBall = ball;
-            targetPocket = pocket;
+
+          const ballToPocketX = pocket.x - ball.x;
+          const ballToPocketY = pocket.y - ball.y;
+          const ballToPocketDistance = Math.hypot(ballToPocketX, ballToPocketY);
+          if (ballToPocketDistance <= 0) continue;
+
+          const unitBallToPocketX = ballToPocketX / ballToPocketDistance;
+          const unitBallToPocketY = ballToPocketY / ballToPocketDistance;
+          const ghostX = ball.x - unitBallToPocketX * (ball.radius * 2);
+          const ghostY = ball.y - unitBallToPocketY * (ball.radius * 2);
+
+          if (!isInsidePlayableArea(ghostX, ghostY, cueBall.radius)) continue;
+          if (!isLaneClear(ball, pocket, [cueBall, ball], ball.radius * 2.05)) continue;
+          if (!isLaneClear(cueBall, { x: ghostX, y: ghostY }, [cueBall, ball], cueBall.radius * 2.05)) continue;
+
+          const cueToGhostX = ghostX - cueBall.x;
+          const cueToGhostY = ghostY - cueBall.y;
+          const cueDistance = Math.hypot(cueToGhostX, cueToGhostY);
+          if (cueDistance <= 0) continue;
+
+          const aimAngle = Math.atan2(cueToGhostY, cueToGhostX);
+          const cueDirX = cueToGhostX / cueDistance;
+          const cueDirY = cueToGhostY / cueDistance;
+          const alignment = cueDirX * unitBallToPocketX + cueDirY * unitBallToPocketY;
+          const shotScore =
+            cueDistance * 0.72 +
+            ballToPocketDistance * 0.5 +
+            (1 - clamp(alignment, -1, 1)) * 140;
+
+          if (!bestShot || shotScore < bestShot.shotScore) {
+            bestShot = {
+              targetBall: ball,
+              ghostX,
+              ghostY,
+              shotScore,
+              cueDistance,
+              pocketDistance: ballToPocketDistance,
+              aimAngle,
+            };
           }
         }
       }
 
-      if (targetBall && targetPocket) {
-        const pocketToBallX = targetBall.x - targetPocket.x;
-        const pocketToBallY = targetBall.y - targetPocket.y;
-        const pocketToBallDistance = Math.hypot(pocketToBallX, pocketToBallY);
+      if (bestShot) {
+        const quality = clamp(1 - bestShot.shotScore / 260, 0.25, 0.95);
+        const errorAngle = (Math.random() - 0.5) * (0.055 - quality * 0.03);
+        const finalAimAngle = bestShot.aimAngle + errorAngle;
+        const power = clamp(8.5 + bestShot.cueDistance * 0.026 + bestShot.pocketDistance * 0.018, 9, 18);
 
-        if (pocketToBallDistance > 0) {
-          const ghostX = targetBall.x + (pocketToBallX / pocketToBallDistance) * (targetBall.radius * 2);
-          const ghostY = targetBall.y + (pocketToBallY / pocketToBallDistance) * (targetBall.radius * 2);
-          const aimX = ghostX - cueBall.x;
-          const aimY = ghostY - cueBall.y;
-          const errorAngle = (Math.random() - 0.5) * 0.04;
-          const currentAimAngle = Math.atan2(aimY, aimX);
-          const finalAimAngle = currentAimAngle + errorAngle;
-          const power = 10 + Math.random() * 15;
+        cueBall.vx = Math.cos(finalAimAngle) * power;
+        cueBall.vy = Math.sin(finalAimAngle) * power;
+        playCueShotSound(Math.min(power / 20, 1));
+      } else if (fallbackTarget) {
+        const aimAngle = Math.atan2(fallbackTarget.y - cueBall.y, fallbackTarget.x - cueBall.x);
+        const errorAngle = (Math.random() - 0.5) * 0.1;
+        const finalAimAngle = aimAngle + errorAngle;
+        const power = clamp(10 + fallbackDistance * 0.02, 10, 16);
 
-          cueBall.vx = Math.cos(finalAimAngle) * power;
-          cueBall.vy = Math.sin(finalAimAngle) * power;
-          playCueShotSound(Math.min(power / 25, 1));
-        }
+        cueBall.vx = Math.cos(finalAimAngle) * power;
+        cueBall.vy = Math.sin(finalAimAngle) * power;
+        playCueShotSound(Math.min(power / 18, 1));
       } else {
         const angle = Math.random() * Math.PI * 2;
         cueBall.vx = Math.cos(angle) * 15;
@@ -878,20 +964,20 @@ export default function PoolGame() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-900 font-sans text-white touch-none selection:bg-transparent">
-      <button
-        onClick={toggleSound}
-        title={soundEnabled ? 'Mute sound' : 'Enable sound'}
-        className="absolute bottom-4 right-4 z-[60] flex items-center gap-2 rounded-xl border border-slate-600 bg-slate-800/90 px-3 py-2 text-sm font-semibold text-slate-100 shadow-lg backdrop-blur-md transition hover:bg-slate-700/90 active:scale-95"
-      >
-        {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-        <span>{soundEnabled ? 'Sound On' : 'Sound Off'}</span>
-      </button>
 
       {uiState.mode === 'menu' && !uiState.message && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/90 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-3xl border border-slate-700 bg-slate-800 p-8 text-center shadow-2xl">
             <h1 className="mb-2 text-4xl font-black text-sky-400">2D PRO POOL</h1>
-            <p className="mb-8 font-medium text-slate-400">เลือกรูปแบบการเล่น</p>
+            <p className="mb-5 font-medium text-slate-400">เลือกรูปแบบการเล่น</p>
+            <button
+              onClick={toggleSound}
+              title={soundEnabled ? 'Mute sound' : 'Enable sound'}
+              className="mb-6 inline-flex items-center gap-2 rounded-xl border border-slate-600 bg-slate-700/80 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-slate-600 active:scale-95"
+            >
+              {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+              <span>{soundEnabled ? 'เสียง: เปิด' : 'เสียง: ปิด'}</span>
+            </button>
 
             <div className="space-y-4">
               <button onClick={() => startGame('solo')} className="w-full rounded-2xl border border-slate-600 bg-slate-700 p-4 transition-transform active:scale-95 hover:bg-slate-600">
@@ -950,9 +1036,19 @@ export default function PoolGame() {
           </div>
 
           <div className="flex flex-col items-end text-right">
-            <button onClick={() => startGame('menu')} className="pointer-events-auto mb-2 rounded-xl border border-slate-600 bg-slate-800/80 p-2 text-slate-300 active:scale-95">
-              <RotateCcw className="h-5 w-5" />
-            </button>
+            <div className="mb-2 flex items-center gap-2">
+              <button
+                onClick={toggleSound}
+                title={soundEnabled ? 'Mute sound' : 'Enable sound'}
+                className="pointer-events-auto inline-flex items-center gap-2 rounded-xl border border-slate-600 bg-slate-800/80 px-3 py-2 text-xs font-semibold text-slate-200 active:scale-95"
+              >
+                {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                <span>{soundEnabled ? 'เสียงเปิด' : 'เสียงปิด'}</span>
+              </button>
+              <button onClick={() => startGame('menu')} className="pointer-events-auto rounded-xl border border-slate-600 bg-slate-800/80 p-2 text-slate-300 active:scale-95">
+                <RotateCcw className="h-5 w-5" />
+              </button>
+            </div>
             <div
               className={`
                 rounded-2xl border px-4 py-2 text-sm font-bold shadow-lg backdrop-blur-md transition-colors duration-300 md:text-base

@@ -9,6 +9,13 @@ const MINI_GAMES = [
     description: 'เกมพูล 2D เล่นได้ทั้งโหมดคนเดียว, เล่น 2 คน และแข่งกับ bot',
     tags: ['Solo', 'Pass & Play', 'Bot Match'],
   },
+  {
+    href: '/mini-game/slot-ramayana',
+    title: 'รามเกียรติ์สล็อต',
+    type: 'Arcade Sports',
+    description: 'เกมพูล 2D เล่นได้ทั้งโหมดคนเดียว, เล่น 2 คน และแข่งกับ bot',
+    tags: ['Solo', 'Pass & Play', 'Bot Match'],
+  },
 ];
 
 export default function MiniGamePage() {
