@@ -10,6 +10,7 @@ import { DEMO_PROJECTS } from '../data/demo-projects';
 export default function DemosLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const isMiniGameRoute = pathname === '/mini-game' || pathname.startsWith('/mini-game/');
   const isMiniGameChildPage = pathname.startsWith('/mini-game/') && pathname !== '/mini-game';
 
   const currentProject = DEMO_PROJECTS.find((project) => pathname.startsWith(project.path)) || {
@@ -18,7 +19,11 @@ export default function DemosLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-[#0A0A0A] font-sans">
+    <div
+      className={`flex w-full flex-col bg-[#0A0A0A] font-sans ${
+        isMiniGameRoute ? 'min-h-[100dvh] md:h-[100dvh] md:overflow-hidden' : 'h-[100dvh] overflow-hidden'
+      }`}
+    >
       {/* HEADER */}
       <div className="z-50 flex h-14 flex-none items-center justify-between border-b border-white/10 bg-[#131620] px-3 sm:px-6 text-zinc-400">
         
@@ -74,7 +79,13 @@ export default function DemosLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      <div className="relative mt-0 flex-1 overflow-x-hidden overflow-y-auto border border-white/5 bg-white shadow-2xl md:mx-2 md:mt-2 md:rounded-t-xl">
+      <div
+        className={`relative mt-0 border border-white/5 bg-white shadow-2xl ${
+          isMiniGameRoute
+            ? 'min-h-[calc(100dvh-3.5rem)] overflow-x-hidden overflow-y-visible md:mx-2 md:mt-2 md:flex-1 md:overflow-y-auto md:rounded-t-xl'
+            : 'flex-1 overflow-x-hidden overflow-y-auto md:mx-2 md:mt-2 md:rounded-t-xl'
+        }`}
+      >
         {children}
       </div>
     </div>

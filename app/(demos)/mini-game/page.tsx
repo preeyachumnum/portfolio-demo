@@ -20,8 +20,8 @@ const MINI_GAMES = [
 
 export default function MiniGamePage() {
   return (
-    <div className="min-h-full bg-[#07131B] text-white">
-      <div className="mx-auto max-w-5xl px-4 py-10 md:px-6 md:py-12">
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-[#07131B] text-white">
+      <div className="mx-auto max-w-5xl px-4 py-10 pb-16 md:px-6 md:py-12">
         <div className="mb-8">
           <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-emerald-300/80">Mini Games</p>
           <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">เลือกเกมที่ต้องการเล่น</h1>

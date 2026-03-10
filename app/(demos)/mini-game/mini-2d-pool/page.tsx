@@ -132,6 +132,7 @@ class PoolBall {
 
 export default function PoolGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const soundEnabledRef = useRef(true);
 
@@ -333,14 +334,39 @@ export default function PoolGame() {
     };
 
     const resize = () => {
-      let width = window.innerWidth * 0.95;
-      let height = window.innerHeight * 0.8;
+      const stageRect = stageRef.current?.getBoundingClientRect();
+      const availableWidth = Math.max((stageRect?.width ?? window.innerWidth) - 16, 320);
+      const viewportHeight = stageRect?.height ?? window.innerHeight;
+      const reservedHeight = window.innerWidth < 768 ? 120 : 96;
+      const availableHeight = Math.max(viewportHeight - reservedHeight, 320);
+      const isPortraitViewport = availableHeight > availableWidth * 1.05;
+      const prevWidth = canvas.width || availableWidth;
+      const prevHeight = canvas.height || availableHeight;
 
-      if (width > height * 2) width = height * 2;
-      else height = width / 2;
+      let width = availableWidth;
+      let height = isPortraitViewport ? width * 1.45 : width / 2;
 
-      canvas.width = Math.max(width, 320);
-      canvas.height = Math.max(height, 450);
+      if (height > availableHeight) {
+        height = availableHeight;
+        width = isPortraitViewport ? height / 1.45 : height * 2;
+      }
+
+      canvas.width = Math.floor(Math.max(width, 320));
+      canvas.height = Math.floor(Math.max(height, isPortraitViewport ? 420 : 240));
+
+      if (balls.length > 0) {
+        const scaleX = canvas.width / prevWidth;
+        const scaleY = canvas.height / prevHeight;
+        const scaleRadius = Math.min(scaleX, scaleY);
+
+        balls.forEach((ball) => {
+          ball.x *= scaleX;
+          ball.y *= scaleY;
+          ball.radius *= scaleRadius;
+          ball.vx *= scaleX;
+          ball.vy *= scaleY;
+        });
+      }
 
       const paddingX = canvas.width * 0.05;
       const paddingY = canvas.height * 0.05;
@@ -364,6 +390,14 @@ export default function PoolGame() {
       if (canvas.height > canvas.width) {
         pockets[4] = { x: table.left, y: table.top + (table.bottom - table.top) / 2, r: pocketRadius };
         pockets[5] = { x: table.right, y: table.top + (table.bottom - table.top) / 2, r: pocketRadius };
+      }
+    };
+
+    const handleResize = () => {
+      resize();
+
+      if (gameRef.current.mode === 'menu') {
+        drawTable();
       }
     };
 
@@ -921,11 +955,13 @@ export default function PoolGame() {
     window.addEventListener('touchmove', handlePointerMove, { passive: false });
     window.addEventListener('touchend', handlePointerUp);
 
+    window.addEventListener('resize', handleResize);
     resize();
     drawTable();
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', handleResize);
       canvas.removeEventListener('mousedown', handlePointerDown);
       window.removeEventListener('mousemove', handlePointerMove);
       window.removeEventListener('mouseup', handlePointerUp);
@@ -963,7 +999,7 @@ export default function PoolGame() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-900 font-sans text-white touch-none selection:bg-transparent">
+    <div className="relative flex min-h-[calc(100dvh-3.5rem)] w-full flex-col overflow-x-hidden bg-slate-900 font-sans text-white touch-pan-y selection:bg-transparent">
 
       {uiState.mode === 'menu' && !uiState.message && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/90 backdrop-blur-sm">
@@ -1063,10 +1099,12 @@ export default function PoolGame() {
         </div>
       )}
 
-      <canvas
-        ref={canvasRef}
-        className="touch-none cursor-crosshair rounded-2xl border border-slate-800 shadow-[0_15px_40px_rgba(0,0,0,0.9)]"
-      />
+      <div ref={stageRef} className="flex flex-1 items-center justify-center px-2 pb-4 pt-24 md:px-6 md:pb-6 md:pt-28">
+        <canvas
+          ref={canvasRef}
+          className="h-auto w-full max-w-[1100px] touch-none cursor-crosshair rounded-2xl border border-slate-800 shadow-[0_15px_40px_rgba(0,0,0,0.9)]"
+        />
+      </div>
 
       {uiState.message && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300">

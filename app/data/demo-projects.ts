@@ -48,4 +48,11 @@ export const DEMO_PROJECTS: DemoProject[] = [
       'หน้า portal รวมมินิเกมทั้งหมดในโปรเจกต์ สำหรับเลือกเข้าเล่นเกมที่มีอยู่ตอนนี้และรองรับการเพิ่มเกมใหม่ในอนาคต',
     status: 'พร้อมแสดง',
   },
+  {
+    path: '/pos-spa',
+    title: 'บริหารจัดการร้านนวดและสปา',
+    description:
+      'ระบบจองคิว (Booking Time-slot) - ระบบ POS แคชเชียร์ - ระบบ Role-based - Responsive & Sound',
+    status: 'พร้อมแสดง',
+  },
 ];
