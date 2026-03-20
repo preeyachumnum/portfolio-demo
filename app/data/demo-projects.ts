@@ -14,6 +14,13 @@ export const DEMO_PROJECTS: DemoProject[] = [
     status: 'พร้อมแสดง',
   },
   {
+    path: '/course',
+    title: 'Course Skill Online',
+    description:
+      'ระบบเรียนออนไลน์',
+    status: 'พร้อมแสดง',
+  },
+  {
     path: '/pos-system',
     title: 'OmniPOS Enterprise',
     description:
