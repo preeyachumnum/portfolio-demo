@@ -8,7 +8,7 @@ export type DemoProject = {
 export const DEMO_PROJECTS: DemoProject[] = [
   {
     path: '/usa-thai-shipping',
-    title: 'USA-Thai Shipping Suite',
+    title: 'Thai Shipping Suite',
     description:
       'Parcel operations system for USA-Thai shipping with Admin flows, Customer portal, and tracking system.',
     status: 'พร้อมแสดง',
