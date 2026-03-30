@@ -14,17 +14,17 @@ export const DEMO_PROJECTS: DemoProject[] = [
     status: 'พร้อมแสดง',
   },
   {
+    path: '/dashboard-mini',
+    title: 'Demo Dashboard',
+    description:
+      'ทดสอบแสดงผล Dashboard UI',
+    status: 'พร้อมแสดง',
+  },
+  {
     path: '/course',
     title: 'Course Skill Online',
     description:
       'ระบบเรียนออนไลน์',
-    status: 'พร้อมแสดง',
-  },
-  {
-    path: '/pos-system',
-    title: 'OmniPOS Enterprise',
-    description:
-      'ระบบจัดการหน้าร้านและหลังบ้านระดับองค์กร พร้อมงานขาย ชำระเงิน และ backoffice workflow แบบครบชุด',
     status: 'พร้อมแสดง',
   },
   {
